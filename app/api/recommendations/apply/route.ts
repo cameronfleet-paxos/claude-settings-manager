@@ -76,9 +76,9 @@ function addValueToUserSettings(
     case "sandbox-host":
       result.sandbox = result.sandbox || {};
       result.sandbox.network = result.sandbox.network || {};
-      result.sandbox.network.allowedHosts = result.sandbox.network.allowedHosts || [];
-      if (!result.sandbox.network.allowedHosts.includes(value)) {
-        result.sandbox.network.allowedHosts = [...result.sandbox.network.allowedHosts, value];
+      result.sandbox.network.allowedDomains = result.sandbox.network.allowedDomains || [];
+      if (!result.sandbox.network.allowedDomains.includes(value)) {
+        result.sandbox.network.allowedDomains = [...result.sandbox.network.allowedDomains, value];
       }
       break;
     case "sandbox-path":
@@ -151,12 +151,12 @@ function removeValueFromSettings(
       }
       break;
     case "sandbox-host":
-      if (result.sandbox?.network?.allowedHosts) {
-        const filtered = result.sandbox.network.allowedHosts.filter((v) => v !== value);
+      if (result.sandbox?.network?.allowedDomains) {
+        const filtered = result.sandbox.network.allowedDomains.filter((v) => v !== value);
         if (filtered.length === 0) {
-          delete result.sandbox.network.allowedHosts;
+          delete result.sandbox.network.allowedDomains;
         } else {
-          result.sandbox.network.allowedHosts = filtered;
+          result.sandbox.network.allowedDomains = filtered;
         }
         if (result.sandbox.network && Object.keys(result.sandbox.network).length === 0) {
           delete result.sandbox.network;

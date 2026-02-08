@@ -71,8 +71,8 @@ function extractValues(
   }
 
   // Extract sandbox settings
-  if (settings.sandbox?.network?.allowedHosts) {
-    for (const value of settings.sandbox.network.allowedHosts) {
+  if (settings.sandbox?.network?.allowedDomains) {
+    for (const value of settings.sandbox.network.allowedDomains) {
       addValue("sandbox-host", value);
     }
   }
@@ -103,7 +103,7 @@ function checkUserHasValue(
     case "permission-ask":
       return userSettings.permissions?.ask?.includes(value) ?? false;
     case "sandbox-host":
-      return userSettings.sandbox?.network?.allowedHosts?.includes(value) ?? false;
+      return userSettings.sandbox?.network?.allowedDomains?.includes(value) ?? false;
     case "sandbox-path":
       return userSettings.sandbox?.filesystem?.write?.allowOnly?.includes(value) ?? false;
     case "sandbox-socket":

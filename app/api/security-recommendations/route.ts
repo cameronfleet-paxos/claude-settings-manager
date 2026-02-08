@@ -86,14 +86,14 @@ const DANGEROUS_ALLOW_PATTERNS: SecurityRule[] = [
     severity: "medium",
     title: "Bash(curl *) allows arbitrary network requests",
     description: "Unrestricted curl access can exfiltrate data or download malicious content.",
-    remediation: "Use sandbox network allowedHosts instead to control network access",
+    remediation: "Use sandbox network allowedDomains instead to control network access",
   },
   {
     pattern: /^Bash\(wget[:\s]\*\)$/i,
     severity: "medium",
     title: "Bash(wget *) allows arbitrary network requests",
     description: "Unrestricted wget access can exfiltrate data or download malicious content.",
-    remediation: "Use sandbox network allowedHosts instead to control network access",
+    remediation: "Use sandbox network allowedDomains instead to control network access",
   },
 ];
 
