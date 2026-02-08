@@ -33,7 +33,6 @@ import {
   AlertTriangle,
   Shield,
 } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import type { SettingsTarget, Settings } from "@/types/settings";
 
 interface SandboxItem {
@@ -52,6 +51,9 @@ export default function SandboxPage() {
   } = useSettingsStore();
 
   const inProject = isInProjectContext();
+
+  // Debug: check project data loading
+  console.log("[Sandbox] inProject:", inProject, "effectiveProject keys:", Object.keys(effectiveProject || {}), "effectiveProjectLocal keys:", Object.keys(effectiveProjectLocal || {}), "projectLocal sandbox:", (effectiveProjectLocal as Record<string, unknown>)?.sandbox);
 
   const [newPath, setNewPath] = useState("");
   const [newDenyPath, setNewDenyPath] = useState("");
@@ -92,7 +94,7 @@ export default function SandboxPage() {
   };
 
   const getHostsFromSource = (settings: Settings | null, source: SettingsTarget): SandboxItem[] => {
-    return (settings?.sandbox?.network?.allowedHosts || []).map((value) => ({
+    return (settings?.sandbox?.network?.allowedDomains || []).map((value) => ({
       value,
       source,
     }));
@@ -231,7 +233,7 @@ export default function SandboxPage() {
   const autoAllowBash = autoAllowBashSetting.value;
   const writePaths = getAllPaths();
   const denyPaths = getAllDenyPaths();
-  const allowedHosts = getAllHosts();
+  const allowedDomains = getAllHosts();
   const unixSockets = getAllSockets();
   const excludedCommands = getAllExcludedCommands();
 
@@ -318,10 +320,10 @@ export default function SandboxPage() {
   const handleAddHost = () => {
     if (!newHost.trim()) return;
     const settings = getSettingsForTarget(defaultTarget);
-    const currentHosts = settings?.sandbox?.network?.allowedHosts || [];
+    const currentHosts = settings?.sandbox?.network?.allowedDomains || [];
     const updatedHosts = [...currentHosts, newHost.trim()];
     updateSetting(
-      ["sandbox", "network", "allowedHosts"],
+      ["sandbox", "network", "allowedDomains"],
       updatedHosts,
       defaultTarget,
       `Added allowed host: ${newHost}`
@@ -332,10 +334,10 @@ export default function SandboxPage() {
 
   const handleRemoveHost = (item: SandboxItem) => {
     const settings = getSettingsForTarget(item.source);
-    const currentHosts = settings?.sandbox?.network?.allowedHosts || [];
+    const currentHosts = settings?.sandbox?.network?.allowedDomains || [];
     const updatedHosts = currentHosts.filter((h) => h !== item.value);
     updateSetting(
-      ["sandbox", "network", "allowedHosts"],
+      ["sandbox", "network", "allowedDomains"],
       updatedHosts,
       item.source,
       `Removed allowed host: ${item.value}`
@@ -444,8 +446,6 @@ export default function SandboxPage() {
   };
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6 max-w-3xl">
         <div>
           <h1 className="text-2xl font-semibold">Sandbox Settings</h1>
@@ -708,7 +708,7 @@ export default function SandboxPage() {
           <Tabs defaultValue="hosts">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="hosts">
-                Allowed Hosts ({allowedHosts.length})
+                Allowed Domains ({allowedDomains.length})
               </TabsTrigger>
               <TabsTrigger value="sockets">
                 Unix Sockets ({unixSockets.length})
@@ -755,7 +755,7 @@ export default function SandboxPage() {
                 </Dialog>
               </div>
               <ItemList
-                items={allowedHosts}
+                items={allowedDomains}
                 onRemove={handleRemoveHost}
                 emptyMessage="No allowed hosts configured"
               />
@@ -813,6 +813,5 @@ export default function SandboxPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }
