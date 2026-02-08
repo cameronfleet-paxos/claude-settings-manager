@@ -21,7 +21,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 # Create launch script
 cat > "$APP_BUNDLE/Contents/MacOS/launch" << 'LAUNCH_SCRIPT'
 #!/bin/bash
-APP_DIR="$HOME/dev/personal-tools/claude-settings-manager"
+APP_DIR="$HOME/dev/claude-settings-manager"
 
 cd "$APP_DIR"
 

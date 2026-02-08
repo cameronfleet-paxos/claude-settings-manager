@@ -5,8 +5,8 @@ A visual editor for Claude Code settings. Manage permissions, sandbox rules, mod
 ## Quick Install (macOS)
 
 ```bash
-git clone https://github.com/cameronfleet-paxos/personal-tools.git
-cd personal-tools/claude-settings-manager
+git clone https://github.com/cameronfleet-paxos/claude-settings-manager.git
+cd claude-settings-manager
 pnpm install
 pnpm electron:build
 cp -R dist/mac-arm64/Claude\ Settings.app /Applications/
