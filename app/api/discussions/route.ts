@@ -9,6 +9,9 @@ export async function GET(
 
   const search = searchParams.get("search") || "";
   const project = searchParams.get("project") || "all";
+  const timeFilter = (searchParams.get("timeFilter") || "all") as "all" | "24h" | "7d" | "30d" | "90d" | "custom";
+  const timeFrom = searchParams.get("timeFrom") ? parseInt(searchParams.get("timeFrom")!, 10) : undefined;
+  const timeTo = searchParams.get("timeTo") ? parseInt(searchParams.get("timeTo")!, 10) : undefined;
   const rebuild = searchParams.get("rebuild") === "true";
 
   // Parse limit (default 50, max 500)
@@ -32,7 +35,7 @@ export async function GET(
   }
 
   const index = rebuild ? await rebuildIndex() : await getOrBuildIndex();
-  const result = queryIndex(index, { search, project, limit, offset });
+  const result = queryIndex(index, { search, project, timeFilter, timeFrom, timeTo, limit, offset });
 
   return NextResponse.json(result);
 }

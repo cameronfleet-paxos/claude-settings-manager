@@ -17,7 +17,7 @@ const HOME = process.env.HOME || process.env.USERPROFILE || "";
 const CLAUDE_DIR = path.join(HOME, ".claude");
 const PROJECTS_DIR = path.join(CLAUDE_DIR, "projects");
 const INDEX_FILE = path.join(CLAUDE_DIR, "discussions-index.json");
-const INDEX_VERSION = 1;
+const INDEX_VERSION = 2;
 
 const EMPTY_PROMPTS = new Set(["(No user prompt found)"]);
 
@@ -28,6 +28,9 @@ let buildPromise: Promise<DiscussionsIndex> | null = null;
 interface QueryParams {
   search?: string;
   project?: string;
+  timeFilter?: "all" | "24h" | "7d" | "30d" | "90d" | "custom";
+  timeFrom?: number;
+  timeTo?: number;
   limit?: number;
   offset?: number;
 }
@@ -297,6 +300,23 @@ export function queryIndex(index: DiscussionsIndex, params: QueryParams): QueryR
   // Filter by project
   if (params.project && params.project !== "all") {
     filtered = filtered.filter((e) => e.projectPath === params.project);
+  }
+
+  // Filter by time range
+  if (params.timeFilter && params.timeFilter !== "all") {
+    if (params.timeFilter === "custom") {
+      if (params.timeFrom) {
+        filtered = filtered.filter((e) => e.mtime >= params.timeFrom!);
+      }
+      if (params.timeTo) {
+        filtered = filtered.filter((e) => e.mtime <= params.timeTo!);
+      }
+    } else {
+      const now = Date.now();
+      const cutoffs: Record<string, number> = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "90d": 7776000000 };
+      const cutoff = now - cutoffs[params.timeFilter];
+      filtered = filtered.filter((e) => e.mtime >= cutoff);
+    }
   }
 
   // Filter by search (substring match on pre-lowercased prompt)

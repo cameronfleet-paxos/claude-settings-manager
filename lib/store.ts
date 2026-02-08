@@ -140,10 +140,14 @@ interface SettingsStore {
   discussionsTotalCount: number;
   discussionsSearchQuery: string;
   discussionsProjectFilter: string;
+  discussionsTimeFilter: "all" | "24h" | "7d" | "30d" | "90d" | "custom";
+  discussionsTimeFrom: number | null;
+  discussionsTimeTo: number | null;
   discussionsProjects: DiscussionsProjectInfo[];
   discussionsIndexedCount: number;
 
   // Deep search state
+  deepSearchEnabled: boolean;
   deepSearchResults: SessionMetadata[];
   deepSearching: boolean;
   deepSearchProgress: { searched: number; total: number } | null;
@@ -223,8 +227,11 @@ interface SettingsStore {
   loadDiscussions: (options?: { limit?: number; rebuild?: boolean }) => Promise<void>;
   setDiscussionsSearchQuery: (query: string) => void;
   setDiscussionsProjectFilter: (project: string) => void;
+  setDiscussionsTimeFilter: (filter: "all" | "24h" | "7d" | "30d" | "90d" | "custom") => void;
+  setDiscussionsCustomRange: (from: number | null, to: number | null) => void;
 
   // Deep search actions
+  setDeepSearchEnabled: (enabled: boolean) => void;
   startDeepSearch: (project: string, search: string) => void;
   cancelDeepSearch: () => void;
   clearDeepSearch: () => void;
@@ -314,10 +321,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   discussionsTotalCount: 0,
   discussionsSearchQuery: "",
   discussionsProjectFilter: "all",
+  discussionsTimeFilter: "all",
+  discussionsTimeFrom: null,
+  discussionsTimeTo: null,
   discussionsProjects: [],
   discussionsIndexedCount: 0,
 
   // Deep search state
+  deepSearchEnabled: false,
   deepSearchResults: [],
   deepSearching: false,
   deepSearchProgress: null,
@@ -1181,6 +1192,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (state.discussionsProjectFilter !== "all") {
         params.set("project", state.discussionsProjectFilter);
       }
+      if (state.discussionsTimeFilter !== "all") {
+        params.set("timeFilter", state.discussionsTimeFilter);
+      }
+      if (state.discussionsTimeFilter === "custom") {
+        if (state.discussionsTimeFrom) params.set("timeFrom", String(state.discussionsTimeFrom));
+        if (state.discussionsTimeTo) params.set("timeTo", String(state.discussionsTimeTo));
+      }
       if (rebuild) {
         params.set("rebuild", "true");
       }
@@ -1211,6 +1229,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ discussionsProjectFilter: project });
   },
 
+  setDiscussionsTimeFilter: (filter: "all" | "24h" | "7d" | "30d" | "90d" | "custom") => {
+    set({ discussionsTimeFilter: filter });
+  },
+
+  setDiscussionsCustomRange: (from: number | null, to: number | null) => {
+    set({ discussionsTimeFrom: from, discussionsTimeTo: to });
+  },
+
+  setDeepSearchEnabled: (enabled: boolean) => {
+    set({ deepSearchEnabled: enabled });
+    if (!enabled) {
+      get().clearDeepSearch();
+    }
+  },
+
   startDeepSearch: (project: string, search: string) => {
     // Abort any existing deep search
     if (deepSearchAbortController) {
@@ -1233,6 +1266,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       project,
       search,
     });
+    const { discussionsTimeFilter: timeFilter, discussionsTimeFrom, discussionsTimeTo } = get();
+    if (timeFilter !== "all") {
+      params.set("timeFilter", timeFilter);
+    }
+    if (timeFilter === "custom") {
+      if (discussionsTimeFrom) params.set("timeFrom", String(discussionsTimeFrom));
+      if (discussionsTimeTo) params.set("timeTo", String(discussionsTimeTo));
+    }
 
     fetch(`/api/discussions/deep-search?${params.toString()}`, {
       signal: controller.signal,

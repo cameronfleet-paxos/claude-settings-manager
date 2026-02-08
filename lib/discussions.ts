@@ -160,6 +160,7 @@ export async function extractFirstUserPrompt(
 
     let lineCount = 0;
     let firstPrompt = "";
+    let hasAnyUserMessage = false;
 
     rl.on("line", (line) => {
       lineCount++;
@@ -178,6 +179,7 @@ export async function extractFirstUserPrompt(
           !entry.isMeta &&
           entry.message?.role === "user"
         ) {
+          hasAnyUserMessage = true;
           let content: string | null = null;
 
           // Handle string content
@@ -233,7 +235,15 @@ export async function extractFirstUserPrompt(
     });
 
     rl.on("close", () => {
-      resolve(firstPrompt || "(No user prompt found)");
+      // Only return "no prompt" sentinel for truly empty conversations (no user messages at all).
+      // Conversations with user messages but no extractable text prompt get a placeholder instead.
+      if (firstPrompt) {
+        resolve(firstPrompt);
+      } else if (hasAnyUserMessage) {
+        resolve("(Conversation)");
+      } else {
+        resolve("(No user prompt found)");
+      }
     });
 
     rl.on("error", () => {

@@ -189,22 +189,29 @@ export default function DiscussionsPage() {
     discussionsTotalCount,
     discussionsSearchQuery,
     discussionsProjectFilter,
+    discussionsTimeFilter,
     discussionsProjects,
     discussionsIndexedCount,
     loadDiscussions,
     setDiscussionsSearchQuery,
     setDiscussionsProjectFilter,
+    setDiscussionsTimeFilter,
+    discussionsTimeFrom,
+    discussionsTimeTo,
+    setDiscussionsCustomRange,
     favourites,
     favouriteSessions,
     loadFavourites,
     toggleFavourite,
     // Deep search
+    deepSearchEnabled,
     deepSearchResults,
     deepSearching,
     deepSearchProgress,
     deepSearchComplete,
     deepSearchTotalMatches,
     deepSearchDurationMs,
+    setDeepSearchEnabled,
     startDeepSearch,
     cancelDeepSearch,
     clearDeepSearch,
@@ -240,14 +247,14 @@ export default function DiscussionsPage() {
     };
   }, [searchInput, setDiscussionsSearchQuery]);
 
-  // Reload when search query or project filter changes (after debounce)
+  // Reload when search query or project/time filter changes (after debounce)
   useEffect(() => {
     // Skip the initial render (handled by initial load above)
     if (!initialLoadDone.current) return;
     loadDiscussions();
-  }, [discussionsSearchQuery, discussionsProjectFilter, loadDiscussions]);
+  }, [discussionsSearchQuery, discussionsProjectFilter, discussionsTimeFilter, discussionsTimeFrom, discussionsTimeTo, loadDiscussions]);
 
-  // Deep search effect: triggered with 600ms debounce when project is selected and search >= 3 chars
+  // Deep search effect: triggered with 600ms debounce when deep search is enabled and search >= 3 chars
   useEffect(() => {
     // Clear any pending deep search debounce
     if (deepSearchDebounceRef.current) {
@@ -258,8 +265,8 @@ export default function DiscussionsPage() {
     // Cancel any in-progress deep search when inputs change
     cancelDeepSearch();
 
-    // Only trigger deep search when a specific project is selected and search is long enough
-    if (discussionsProjectFilter === "all" || !discussionsSearchQuery || discussionsSearchQuery.length < 3) {
+    // Only trigger deep search when enabled and search is long enough
+    if (!deepSearchEnabled || !discussionsSearchQuery || discussionsSearchQuery.length < 3) {
       clearDeepSearch();
       return;
     }
@@ -274,7 +281,7 @@ export default function DiscussionsPage() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discussionsSearchQuery, discussionsProjectFilter]);
+  }, [discussionsSearchQuery, discussionsProjectFilter, discussionsTimeFilter, deepSearchEnabled]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -289,6 +296,31 @@ export default function DiscussionsPage() {
       setDiscussionsProjectFilter(value);
     },
     [setDiscussionsProjectFilter]
+  );
+
+  const handleTimeFilterChange = useCallback(
+    (value: string) => {
+      setDiscussionsTimeFilter(value as "all" | "24h" | "7d" | "30d" | "90d" | "custom");
+      if (value !== "custom") {
+        setDiscussionsCustomRange(null, null);
+      }
+      clearDeepSearch();
+    },
+    [setDiscussionsTimeFilter, setDiscussionsCustomRange, clearDeepSearch]
+  );
+
+  const handleCustomDateChange = useCallback(
+    (type: "from" | "to", dateStr: string) => {
+      if (type === "from") {
+        const from = dateStr ? new Date(dateStr).getTime() : null;
+        setDiscussionsCustomRange(from, discussionsTimeTo);
+      } else {
+        // Set "to" to end of day so the full day is included
+        const to = dateStr ? new Date(dateStr).getTime() + 86400000 - 1 : null;
+        setDiscussionsCustomRange(discussionsTimeFrom, to);
+      }
+    },
+    [setDiscussionsCustomRange, discussionsTimeFrom, discussionsTimeTo]
   );
 
   const handleRefresh = useCallback(() => {
@@ -338,7 +370,7 @@ export default function DiscussionsPage() {
   }, [mergedResults, favouriteFilter, favouriteSessions]);
 
   const hasData = discussions.length > 0 || deepSearchResults.length > 0;
-  const isFiltering = discussionsSearchQuery || discussionsProjectFilter !== "all";
+  const isFiltering = discussionsSearchQuery || discussionsProjectFilter !== "all" || discussionsTimeFilter !== "all";
   const hasDeepResults = deepSearchResults.length > 0;
   const showDeepSearchProgress = deepSearching || deepSearchComplete;
 
@@ -424,7 +456,7 @@ export default function DiscussionsPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
@@ -432,7 +464,23 @@ export default function DiscussionsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant={deepSearchEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDeepSearchEnabled(!deepSearchEnabled)}
+                className={
+                  deepSearchEnabled
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : ""
+                }
+              >
+                <Search
+                  className="h-4 w-4 mr-1"
+                />
+                Deep search
+              </Button>
+
               <Button
                 variant={favouriteFilter === "favourites" ? "default" : "outline"}
                 size="sm"
@@ -453,26 +501,58 @@ export default function DiscussionsPage() {
                 Favourites
               </Button>
 
+              <Select value={discussionsTimeFilter} onValueChange={handleTimeFilterChange}>
+                <SelectTrigger className="w-[140px]">
+                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="24h">Last 24h</SelectItem>
+                  <SelectItem value="7d">Last 7 days</SelectItem>
+                  <SelectItem value="30d">Last 30 days</SelectItem>
+                  <SelectItem value="90d">Last 90 days</SelectItem>
+                  <SelectItem value="custom">Custom range</SelectItem>
+                </SelectContent>
+              </Select>
+
               {discussionsProjects.length > 1 && (
-                <>
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select value={discussionsProjectFilter} onValueChange={handleProjectFilterChange}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Filter by project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All projects</SelectItem>
-                      {discussionsProjects.map((project) => (
-                        <SelectItem key={project.path} value={project.path}>
-                          {project.name} ({project.count})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
+                <Select value={discussionsProjectFilter} onValueChange={handleProjectFilterChange}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-1 text-muted-foreground" />
+                    <SelectValue placeholder="Filter by project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {discussionsProjects.map((project) => (
+                      <SelectItem key={project.path} value={project.path}>
+                        {project.name} ({project.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </div>
+
+          {discussionsTimeFilter === "custom" && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                className="w-[150px] h-8 text-sm"
+                value={discussionsTimeFrom ? new Date(discussionsTimeFrom).toISOString().split("T")[0] : ""}
+                onChange={(e) => handleCustomDateChange("from", e.target.value)}
+              />
+              <span className="text-sm text-muted-foreground">to</span>
+              <Input
+                type="date"
+                className="w-[150px] h-8 text-sm"
+                value={discussionsTimeTo ? new Date(discussionsTimeTo - 86400000 + 1).toISOString().split("T")[0] : ""}
+                onChange={(e) => handleCustomDateChange("to", e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Discussions List */}
@@ -507,11 +587,6 @@ export default function DiscussionsPage() {
                   <p className="text-lg font-medium">
                     No conversations matching &quot;{discussionsSearchQuery}&quot;
                   </p>
-                  {discussionsProjectFilter === "all" && discussionsSearchQuery.length >= 3 && (
-                    <p className="text-sm mt-1">
-                      Select a project to search full conversation content.
-                    </p>
-                  )}
                   <Button
                     variant="link"
                     className="mt-2"

@@ -1,18 +1,14 @@
 import { NextRequest } from "next/server";
 import { getOrBuildIndex } from "@/lib/discussions-index";
-import { deepSearchProject } from "@/lib/discussions-deep-search";
+import { deepSearchProject, deepSearchAll } from "@/lib/discussions-deep-search";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const project = searchParams.get("project");
   const search = searchParams.get("search");
-
-  if (!project) {
-    return new Response(
-      JSON.stringify({ error: "project parameter is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  const timeFilter = searchParams.get("timeFilter") as "all" | "24h" | "7d" | "30d" | "90d" | "custom" | null;
+  const timeFrom = searchParams.get("timeFrom") ? parseInt(searchParams.get("timeFrom")!, 10) : null;
+  const timeTo = searchParams.get("timeTo") ? parseInt(searchParams.get("timeTo")!, 10) : null;
 
   if (!search || search.length < 3) {
     return new Response(
@@ -21,19 +17,42 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const index = await getOrBuildIndex();
+  let index = await getOrBuildIndex();
+
+  // Apply time filter to index entries before deep search
+  if (timeFilter && timeFilter !== "all") {
+    if (timeFilter === "custom") {
+      const filteredEntries: typeof index.entries = {};
+      for (const [id, entry] of Object.entries(index.entries)) {
+        if (timeFrom && entry.mtime < timeFrom) continue;
+        if (timeTo && entry.mtime > timeTo) continue;
+        filteredEntries[id] = entry;
+      }
+      index = { ...index, entries: filteredEntries };
+    } else {
+      const now = Date.now();
+      const cutoffs: Record<string, number> = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "90d": 7776000000 };
+      const cutoff = now - cutoffs[timeFilter];
+      const filteredEntries: typeof index.entries = {};
+      for (const [id, entry] of Object.entries(index.entries)) {
+        if (entry.mtime >= cutoff) {
+          filteredEntries[id] = entry;
+        }
+      }
+      index = { ...index, entries: filteredEntries };
+    }
+  }
+
+  const generator = project && project !== "all"
+    ? deepSearchProject(project, search, request.signal, index)
+    : deepSearchAll(search, request.signal, index);
 
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
 
       try {
-        for await (const event of deepSearchProject(
-          project,
-          search,
-          request.signal,
-          index
-        )) {
+        for await (const event of generator) {
           if (request.signal.aborted) break;
 
           const data = `data: ${JSON.stringify(event)}\n\n`;

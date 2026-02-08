@@ -248,3 +248,92 @@ export async function* deepSearchProject(
     durationMs: Date.now() - startTime,
   };
 }
+
+/**
+ * Deep search all conversations across all projects.
+ * Async generator that yields progress, result, and complete events.
+ *
+ * Processes all index entries regardless of project, resolving file paths
+ * per-project using encodeProjectPath. Batches of 12 concurrent reads.
+ */
+export async function* deepSearchAll(
+  searchTerm: string,
+  signal: AbortSignal,
+  index: DiscussionsIndex
+): AsyncGenerator<DeepSearchEvent> {
+  const startTime = Date.now();
+  const searchLower = searchTerm.toLowerCase();
+
+  // All entries sorted by mtime descending
+  const allEntries: DiscussionsIndexEntry[] = Object.values(index.entries)
+    .sort((a, b) => b.mtime - a.mtime);
+
+  const total = allEntries.length;
+  if (total === 0) {
+    yield { type: "complete", totalMatches: 0, totalSearched: 0, durationMs: Date.now() - startTime };
+    return;
+  }
+
+  // Cache encoded project dirs
+  const encodedDirCache = new Map<string, string>();
+  const getProjectDir = (projectPath: string) => {
+    let dir = encodedDirCache.get(projectPath);
+    if (!dir) {
+      dir = path.join(PROJECTS_DIR, encodeProjectPath(projectPath));
+      encodedDirCache.set(projectPath, dir);
+    }
+    return dir;
+  };
+
+  let searched = 0;
+  let totalMatches = 0;
+  const BATCH_SIZE = 12;
+
+  for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
+    if (signal.aborted) return;
+
+    const batch = allEntries.slice(i, i + BATCH_SIZE);
+
+    const results = await Promise.all(
+      batch.map(async (entry) => {
+        if (signal.aborted) return null;
+
+        const projectDir = getProjectDir(entry.projectPath);
+        const jsonlPath = path.join(projectDir, `${entry.sessionId}.jsonl`);
+        const match = await searchFile(jsonlPath, searchLower, signal);
+
+        if (match) {
+          return {
+            sessionId: entry.sessionId,
+            projectPath: entry.projectPath,
+            projectName: entry.projectName,
+            timestamp: entry.mtime,
+            firstUserPrompt: entry.firstUserPrompt,
+            matchContext: match.matchContext,
+            matchRole: match.matchRole,
+          } satisfies DeepSearchMatch;
+        }
+        return null;
+      })
+    );
+
+    if (signal.aborted) return;
+
+    for (const match of results) {
+      if (match) {
+        totalMatches++;
+        yield { type: "result", match };
+      }
+    }
+
+    searched += batch.length;
+    yield { type: "progress", searched, total };
+  }
+
+  yield {
+    type: "complete",
+    totalMatches,
+    totalSearched: searched,
+    durationMs: Date.now() - startTime,
+  };
+}
