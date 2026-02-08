@@ -18,6 +18,19 @@ Then open **Claude Settings** from `~/Applications`.
 - **Hooks**: Configure pre/post command hooks
 - **Commands**: View and manage slash commands
 
+## Build from Source
+
+Requires [Node.js](https://nodejs.org/) (v18+) and [pnpm](https://pnpm.io/).
+
+```bash
+git clone https://github.com/cameronfleet-paxos/claude-settings-manager.git
+cd claude-settings-manager
+pnpm install
+./scripts/deploy-local.sh
+```
+
+This builds the app and installs it to `~/Applications/Claude Settings.app`.
+
 ## Development
 
 ```bash
