@@ -43,8 +43,6 @@ import {
   Edit3,
   Server,
 } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
-
 type RuleType = "allow" | "deny" | "ask";
 type ToolCategory = "bash" | "webfetch" | "websearch" | "read" | "edit" | "mcp" | "other";
 
@@ -324,8 +322,6 @@ export default function PermissionsPage() {
   };
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -616,6 +612,5 @@ export default function PermissionsPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }

@@ -17,7 +17,6 @@ import {
   Activity,
   Coins,
 } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 
 export default function StatsPage() {
   const { stats, isLoading } = useSettingsStore();
@@ -85,8 +84,6 @@ export default function StatsPage() {
   );
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Usage Statistics</h1>
@@ -293,6 +290,5 @@ export default function StatsPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }

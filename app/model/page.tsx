@@ -10,8 +10,6 @@ import { ScopeBadge, getScopeDescription } from "@/components/ui/scope-badge";
 import type { Scope } from "@/components/ui/scope-badge";
 import type { SettingsTarget } from "@/types/settings";
 import { Brain, Zap, Sparkles, Lightbulb } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
-
 const models = [
   {
     id: "opus",
@@ -103,8 +101,6 @@ export default function ModelPage() {
   }
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Model Settings</h1>
@@ -212,6 +208,5 @@ export default function ModelPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }

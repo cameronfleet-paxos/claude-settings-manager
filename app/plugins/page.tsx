@@ -12,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Puzzle, Info, Calendar, FolderOpen } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import type { SettingsTarget } from "@/types/settings";
 
 export default function PluginsPage() {
@@ -53,8 +52,6 @@ export default function PluginsPage() {
   const pluginEntries = Object.entries(installedPlugins);
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6 max-w-3xl">
         <div>
           <h1 className="text-2xl font-semibold">Plugins</h1>
@@ -141,6 +138,5 @@ export default function PluginsPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }

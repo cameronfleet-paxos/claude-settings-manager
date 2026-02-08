@@ -28,7 +28,6 @@ import {
   Clock,
   Sparkles,
 } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import type { CommandEntry } from "@/types/settings";
 
 function truncatePath(filePath: string): string {
@@ -94,8 +93,6 @@ export default function CommandsPage() {
   });
 
   return (
-    <>
-      <LoadingOverlay isVisible={isIndexing && hasData} />
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -283,6 +280,5 @@ export default function CommandsPage() {
         </div>
       )}
       </div>
-    </>
   );
 }

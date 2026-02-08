@@ -14,8 +14,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { ScopeBadge } from "@/components/ui/scope-badge";
-import { LoadingOverlay } from "@/components/loading-overlay";
-
 export default function ProjectsPage() {
   const router = useRouter();
   const { settingsIndex, isIndexing, loadIndex, reindex, selectProject, selectedProjectPath } =
@@ -75,8 +73,6 @@ export default function ProjectsPage() {
   }
 
   return (
-    <>
-      <LoadingOverlay isVisible={isIndexing && hasData} />
       <div className="space-y-6">
         <div className="flex items-start justify-between">
         <div>
@@ -200,6 +196,5 @@ export default function ProjectsPage() {
         ))}
       </div>
       </div>
-    </>
   );
 }

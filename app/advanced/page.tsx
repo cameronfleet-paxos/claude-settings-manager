@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Terminal, Wrench } from "lucide-react";
 import { ScopeBadge } from "@/components/ui/scope-badge";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import type { SettingsTarget, Settings } from "@/types/settings";
 
 interface PatternItem {
@@ -134,8 +133,6 @@ export default function AdvancedPage() {
   };
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6 max-w-3xl">
         <div>
           <h1 className="text-2xl font-semibold">Advanced Settings</h1>
@@ -289,6 +286,5 @@ export default function AdvancedPage() {
         </CardContent>
       </Card>
       </div>
-    </>
   );
 }

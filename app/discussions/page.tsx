@@ -31,7 +31,6 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import { DeepSearchProgress } from "@/components/deep-search-progress";
 import type { SessionMetadata } from "@/types/settings";
 
@@ -400,8 +399,6 @@ export default function DiscussionsPage() {
   }, [filteredDiscussions.length, discussionsTotalCount, discussionsIndexedCount, isFiltering, favouriteFilter, hasDeepResults, discussions, deepSearchResults]);
 
   return (
-    <>
-      <LoadingOverlay isVisible={discussionsLoading && hasData} />
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -649,6 +646,5 @@ export default function DiscussionsPage() {
           </div>
         )}
       </div>
-    </>
   );
 }

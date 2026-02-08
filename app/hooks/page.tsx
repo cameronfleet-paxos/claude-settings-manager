@@ -31,7 +31,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Terminal, MessageSquare } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import type { HookType, HookMatcher, Hook, SettingsTarget, Settings } from "@/types/settings";
 
 interface HookItem {
@@ -227,8 +226,6 @@ export default function HooksPage() {
   };
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6 max-w-3xl">
         <div>
           <h1 className="text-2xl font-semibold">Hooks</h1>
@@ -443,6 +440,5 @@ export default function HooksPage() {
         </DialogContent>
       </Dialog>
       </div>
-    </>
   );
 }

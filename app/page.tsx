@@ -40,7 +40,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SyncButton } from "@/components/sync-button";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function getTypeLabel(type: RecommendationType): string {
@@ -287,8 +286,6 @@ export default function DashboardPage() {
   }
 
   return (
-    <>
-      <LoadingOverlay isVisible={isLoading && hasData} />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
         <div>
@@ -1214,6 +1211,5 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
-    </>
   );
 }
