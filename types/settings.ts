@@ -46,7 +46,7 @@ export interface SandboxFilesystem {
 }
 
 export interface SandboxNetwork {
-  allowedHosts?: string[];
+  allowedDomains?: string[];
   allowUnixSockets?: string[];
   allowLocalBinding?: boolean;
 }
