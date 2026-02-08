@@ -22,7 +22,13 @@ import {
   Terminal,
   MessageSquare,
   Cog,
+  Loader2,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { UpdateIndicator } from "@/components/update-indicator";
 
 const navigation = [
@@ -42,7 +48,17 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { selectedProjectPath, settingsIndex } = useSettingsStore();
+  const { selectedProjectPath, settingsIndex, isLoading, isIndexing, isSyncing } = useSettingsStore();
+
+  const isActive = isSyncing || isIndexing || isLoading;
+  const statusText = isSyncing ? "Syncing..." : isIndexing ? "Indexing..." : isLoading ? "Loading..." : "";
+  const tooltipText = isSyncing
+    ? "Syncing settings from disk"
+    : isIndexing
+    ? "Re-scanning project settings"
+    : isLoading
+    ? "Loading data"
+    : "";
 
   // Get current project name
   const currentProjectName = selectedProjectPath === null
@@ -106,6 +122,25 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t p-2">
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground transition-opacity duration-300 ${
+            isActive ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          {isActive && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>{statusText}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {tooltipText}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         <Link
           href="/updates"
           className={cn(
