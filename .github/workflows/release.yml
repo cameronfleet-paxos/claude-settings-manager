@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14  # Apple Silicon runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        run: pnpm build
+
+      - name: Prepare standalone
+        run: node scripts/prepare-standalone.js
+
+      - name: Package with electron-builder
+        run: pnpm exec electron-builder --mac --publish never
+
+      - name: Fix standalone bundle
+        run: node scripts/post-build-copy.js
+
+      - name: Create DMG
+        run: node scripts/create-dmg.js
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get DMG filename
+        id: dmg
+        run: |
+          VERSION_NUMBER="${{ steps.version.outputs.version }}"
+          VERSION_NUMBER="${VERSION_NUMBER#v}"
+          echo "filename=Claude-Settings-${VERSION_NUMBER}-arm64.dmg" >> $GITHUB_OUTPUT
+
+      - name: Refetch tags with annotations
+        run: |
+          git fetch --tags --force
+
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          CURRENT="${{ steps.version.outputs.version }}"
+          PREV=$(git tag --sort=-v:refname | grep -A1 "^${CURRENT}$" | tail -1)
+          if [ "$PREV" = "$CURRENT" ] || [ -z "$PREV" ]; then
+            PREV=$(git tag --sort=-v:refname | head -2 | tail -1)
+          fi
+          echo "tag=$PREV" >> $GITHUB_OUTPUT
+
+      - name: Get tag annotation (release notes)
+        id: tag_notes
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          NOTES=$(git tag -l --format='%(contents)' "$TAG" | tail -n +2)
+          if [ -z "$NOTES" ]; then
+            NOTES="No release notes provided."
+          fi
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Claude Settings ${{ steps.version.outputs.version }}
+          body: |
+            ${{ steps.tag_notes.outputs.notes }}
+
+            ---
+
+            **Install:** `curl -fsSL https://raw.githubusercontent.com/cameronfleet-paxos/claude-settings-manager/main/install.sh | bash`
+
+            **Full Changelog:** https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.tag }}...${{ steps.version.outputs.version }}
+          files: dist/${{ steps.dmg.outputs.filename }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

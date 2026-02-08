@@ -2,6 +2,7 @@ const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const net = require('net');
+const { initAutoUpdater, setAutoUpdaterWindow, checkForUpdatesOnLaunch, startPeriodicChecks, stopPeriodicChecks } = require('./auto-updater');
 
 let mainWindow;
 let serverProcess;
@@ -158,9 +159,14 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  initAutoUpdater();
+
   try {
     await startServer();
     createWindow();
+    setAutoUpdaterWindow(mainWindow);
+    checkForUpdatesOnLaunch();
+    startPeriodicChecks();
   } catch (err) {
     console.error('Failed to start application:', err);
     app.quit();
@@ -180,6 +186,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  stopPeriodicChecks();
   if (serverProcess) {
     console.log('Stopping server...');
     serverProcess.kill();

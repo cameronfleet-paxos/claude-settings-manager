@@ -2,17 +2,13 @@
 
 A visual editor for Claude Code settings. Manage permissions, sandbox rules, model preferences, and hooks across global and project scopes.
 
-## Quick Install (macOS)
+## Quick Install (macOS Apple Silicon)
 
 ```bash
-git clone https://github.com/cameronfleet-paxos/claude-settings-manager.git
-cd claude-settings-manager
-pnpm install
-pnpm electron:build
-cp -R dist/mac-arm64/Claude\ Settings.app /Applications/
+curl -fsSL https://raw.githubusercontent.com/cameronfleet-paxos/claude-settings-manager/main/install.sh | bash
 ```
 
-Then open **Claude Settings** from your Applications folder.
+Then open **Claude Settings** from `~/Applications`.
 
 ## Features
 
@@ -33,7 +29,6 @@ pnpm electron:dev     # Run in Electron with hot reload
 ## Building
 
 ```bash
-pnpm electron:build   # Build production Electron app
+./scripts/deploy-local.sh    # Build and install to ~/Applications
+pnpm electron:build          # Build production DMG (dist/Claude-Settings-*.dmg)
 ```
-
-The built app will be in `dist/mac-arm64/Claude Settings.app`.

@@ -21,7 +21,9 @@ import {
   Users,
   Terminal,
   MessageSquare,
+  Cog,
 } from "lucide-react";
+import { UpdateIndicator } from "@/components/update-indicator";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -49,9 +51,12 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-muted/30">
-      <div className="flex h-14 items-center border-b px-4">
-        <Settings className="mr-2 h-5 w-5" />
-        <span className="font-semibold">Claude Settings</span>
+      <div className="border-b">
+        <div className="flex h-14 items-center px-4">
+          <Settings className="mr-2 h-5 w-5" />
+          <span className="font-semibold">Claude Settings</span>
+        </div>
+        <UpdateIndicator />
       </div>
 
       {/* Current Project Indicator */}
@@ -99,6 +104,21 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      <div className="border-t p-2">
+        <Link
+          href="/updates"
+          className={cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            pathname === "/updates"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <Cog className="h-4 w-4" />
+          App Settings
+        </Link>
+      </div>
     </div>
   );
 }

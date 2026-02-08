@@ -8,11 +8,13 @@ cd "$(dirname "$0")/.."
 echo "Cleaning build artifacts..."
 rm -rf dist .standalone-build .next
 
-# Build the app
+# Build the app (using --dir for faster local builds, no DMG needed)
 echo "Building Electron app..."
-pnpm electron:build
+pnpm electron:build:dir
 
 # Deploy to Applications
 echo "Deploying to ~/Applications..."
+mkdir -p ~/Applications
+rm -rf ~/Applications/Claude\ Settings.app
 cp -R dist/mac-arm64/Claude\ Settings.app ~/Applications/
 echo "Deployed Claude Settings.app to ~/Applications"

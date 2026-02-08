@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "electron:dev": "concurrently \"pnpm dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "pnpm build && node scripts/prepare-standalone.js && electron-builder --mac && cp -R .standalone-build/node_modules dist/mac-arm64/Claude\\ Settings.app/Contents/Resources/standalone/ && cp -R .standalone-build/.next dist/mac-arm64/Claude\\ Settings.app/Contents/Resources/standalone/",
+    "electron:build": "pnpm build && node scripts/prepare-standalone.js && electron-builder --mac --dir && node scripts/post-build-copy.js && node scripts/create-dmg.js",
+    "electron:build:dir": "pnpm build && node scripts/prepare-standalone.js && electron-builder --mac --dir && node scripts/post-build-copy.js",
     "electron:start": "electron ."
   },
   "build": {
@@ -38,7 +39,12 @@
         "filter": ["**/*"]
       }
     ],
-    "asar": false
+    "asar": false,
+    "publish": {
+      "provider": "github",
+      "owner": "cameronfleet-paxos",
+      "repo": "claude-settings-manager"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
