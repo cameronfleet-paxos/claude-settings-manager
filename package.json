@@ -1,6 +1,6 @@
 {
   "name": "claude-settings-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -28,7 +28,9 @@
       "target": [
         {
           "target": "dir",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         }
       ]
     },
@@ -36,7 +38,9 @@
       {
         "from": ".standalone-build",
         "to": "standalone",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "asar": false,

@@ -1457,6 +1457,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   triggerTokenScan: async () => {
     try {
+      // Immediately show scanning state so the UI spinner appears without delay
+      set((state) => ({
+        tokenScanMetadata: {
+          ...state.tokenScanMetadata,
+          scanStatus: 'running',
+        },
+      }));
+
       const response = await fetch("/api/security-scan/trigger", {
         method: "POST",
       });
@@ -1481,6 +1489,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       }, 2000);
     } catch (err) {
       console.error("Error triggering token scan:", err);
+      // Revert scanning state on error
+      set((state) => ({
+        tokenScanMetadata: {
+          ...state.tokenScanMetadata,
+          scanStatus: 'idle',
+        },
+      }));
     }
   },
 
